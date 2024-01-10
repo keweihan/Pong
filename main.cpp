@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
+#include <memory>
+
 
 using namespace std;
 using namespace SimpleECS;
@@ -125,6 +127,22 @@ public:
 	Player player;
 };
 
+class CollideSoundEffect : public Component {
+public:
+	CollideSoundEffect(std::string pathToEffect) {
+		sound = make_unique<SoundPlayer>(pathToEffect);
+	}
+	void update() override {}
+	void initialize() override {}
+	void onCollide(const Collider& other) override
+	{
+		if (other.entity->tag != "ball") return;
+		sound->playAudio();
+	}
+
+	unique_ptr<SoundPlayer> sound;
+};
+
 Entity* createPaddle(Player player)
 {
 	// Create paddle and add to scene
@@ -133,6 +151,7 @@ Entity* createPaddle(Player player)
 	paddle->addComponent(new RectangleRenderer(10, PADDLE_LENGTH, Color(0xFF, 0xFF, 0xFF)));
 	paddle->addComponent(new PaddleController(player));
 	paddle->addComponent(new BoxCollider(10, PADDLE_LENGTH));
+	paddle->addComponent(new CollideSoundEffect("PongPaddle.wav"));
 
 	// Position differently based on player
 	paddle->transform.position.x = player == PLAYER1 || player == COMPUTER1 ? -SCREEN_WIDTH / 2 + 20 : SCREEN_WIDTH / 2 - 20;
@@ -165,6 +184,7 @@ Entity* createFloorCeilingWall()
 {
 	Entity* wall = new Entity();
 	wall->addComponent(new BoxCollider(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS));
+	wall->addComponent(new CollideSoundEffect("PongBlip1.wav"));
 	return wall;
 }
 
@@ -173,6 +193,7 @@ Entity* createSideWalls(Player player)
 	Entity* wall = new Entity();
 	wall->addComponent(new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS));
 	wall->addComponent(new BoundScoreRegister(player));
+	wall->addComponent(new CollideSoundEffect("PongScore.wav"));
 	return wall;
 }
 
