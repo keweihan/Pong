@@ -230,6 +230,7 @@ int main() {
 	
 	// Setup game
 	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
+	game.setName("Auto Pong");
 	pongScene = new Scene(Color(0,0,0,255));
 	game.addScene(pongScene);
 	addBoundsToScene();
