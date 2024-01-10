@@ -31,7 +31,8 @@ FontRenderer* rightText;
 Scene* pongScene;
 Entity* ball;
 
-enum Player {
+// PlayerTypes
+enum PlayerType {
 	PLAYER1,
 	PLAYER2,
 	COMPUTER1,
@@ -40,11 +41,12 @@ enum Player {
 
 // Forward declares
 Entity* createBall();
+void spawnBall();
 
 // Component for controlling paddle movement manually
 class PaddleController : public Component {
 public:
-	PaddleController(Player player) : player(player) {};
+	PaddleController(PlayerType player) : player(player) {};
 	
 	void initialize() {}
 
@@ -92,13 +94,13 @@ public:
 	}
 
 private:
-	Player player;
+	PlayerType player;
 };
 
 // Component for registering score
 class BoundScoreRegister : public Component {
 public: 
-	BoundScoreRegister(Player player) : player(player) {}
+	BoundScoreRegister(PlayerType player) : player(player) {}
 	void update() override {}
 	void initialize() override {}
 	void onCollide(const Collider& other) override
@@ -122,13 +124,11 @@ public:
 			}
 
 			//Spawn new ball
-			Entity* newBall = createBall();
-			pongScene->AddEntity(newBall);
-			ball = newBall;
+			spawnBall();
 		}
 	}
 
-	Player player;
+	PlayerType player;
 };
 
 // Component for playing a sound effect on collision
@@ -151,7 +151,7 @@ public:
 };
 
 // Construct paddle for a corresponding a player type
-Entity* createPaddle(Player player)
+Entity* createPaddle(PlayerType player)
 {
 	// Create paddle and add to scene
 	Entity* paddle = new Entity();
@@ -198,7 +198,7 @@ Entity* createFloorCeilingWall()
 }
 
 // Create a side walls with sound effect and score tallying on collision
-Entity* createSideWalls(Player player)
+Entity* createSideWalls(PlayerType player)
 {
 	Entity* wall = new Entity();
 	wall->addComponent(new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS));
@@ -215,8 +215,8 @@ Entity* createCenterLine()
 	return line;
 }
 
-// Create upper and lower walls, and side walls that keep score tracking
-void addBoundsToScene()
+// Create upper and lower walls in scene, and side walls that keep score tracking
+void addBounds()
 {
 	// Create and position top and bottom colliders
 	Entity* topBound = createFloorCeilingWall();
@@ -238,8 +238,8 @@ void addBoundsToScene()
 	pongScene->AddEntity(leftBound);
 }
 
-// Create and position score text
-void createText()
+// Create and position score text in scene
+void addScoreCounters()
 {
 	Entity* leftScore = new Entity();
 	leftScore->transform.position = Vector(-SCREEN_WIDTH / 4, 200);
@@ -257,28 +257,31 @@ void createText()
 	pongScene->AddEntity(rightScore);
 }
 
-int main() {
-	cout << "Hello World!" << endl;
-	
-	// Setup game
-	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
-	game.setName("Auto Pong");
-	pongScene = new Scene(Color(0,0,0,255));
-	game.addScene(pongScene);
-	addBoundsToScene();
-	createText();
-
-	// Create center line
-	pongScene->AddEntity(createCenterLine());
-
-	// Create paddles
-	pongScene->AddEntity(createPaddle(COMPUTER1));
-	pongScene->AddEntity(createPaddle(COMPUTER2));
-
-	// Create ball
+void spawnBall()
+{
 	Entity* newBall = createBall();
 	pongScene->AddEntity(newBall);
 	ball = newBall;
+}
+
+int main() {
+	cout << "Hello World!" << endl;
+	
+	// Create scene
+	pongScene = new Scene(Color(0, 0, 0, 255));
+
+	// Populate scene
+	addBounds();
+	addScoreCounters();
+	pongScene->AddEntity(createCenterLine());
+	pongScene->AddEntity(createPaddle(COMPUTER1));
+	pongScene->AddEntity(createPaddle(COMPUTER2));
+	spawnBall();
+
+	// Create game with scene
+	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
+	game.setName("Auto Pong");
+	game.addScene(pongScene);
 
 	// Start game loop
 	game.startGame();
