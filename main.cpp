@@ -48,10 +48,12 @@ public:
 	
 	void initialize() {}
 
+	// Apply computer control of paddle based on ball position
 	void aiControl(bool& downPressed, bool& upPressed)
 	{
-		if ((ball->transform.position.x > 0 && player == COMPUTER2) ||
-			(ball->transform.position.x < 0 && player == COMPUTER1))
+		bool comp2Active = ball->transform.position.x > 0 && player == COMPUTER2;
+		bool comp1Active = ball->transform.position.x < 0 && player == COMPUTER1;
+		if (comp2Active || comp1Active)
 		{
 			if (ball->transform.position.y > entity->transform.position.y)
 			{
@@ -68,6 +70,7 @@ public:
 
 	void update() override
 	{
+		// Determine control scheme for this controller
 		bool downPressed = player == PLAYER1 ?	Input::getKeyDown(KeyCode::KEY_S) :
 												Input::getKeyDown(KeyCode::KEY_DOWN_ARROW);
 		bool upPressed	= player == PLAYER1 ?	Input::getKeyDown(KeyCode::KEY_W) : 
@@ -77,11 +80,8 @@ public:
 			aiControl(downPressed, upPressed);
 		}
 
-		if (upPressed && downPressed)
-		{
-			// do nothing
-		}
-		else if (upPressed && entity->transform.position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
+		// Move paddle based on input and limit movement
+		if (upPressed && entity->transform.position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
 		{
 			entity->transform.position.y += 3;
 		}
@@ -101,32 +101,37 @@ public:
 	BoundScoreRegister(Player player) : player(player) {}
 	void update() override {}
 	void initialize() override {}
-	void onCollide(const Collider& other) override 
+	void onCollide(const Collider& other) override
 	{
-		if (other.entity->tag != "ball") return;
-
-		// Ball has collided. Tally score, destroy ball and respawn
-		pongScene->DestroyEntity(other.entity);
-		
-		if (player == PLAYER1)
+		// Ball has collided. 
+		if (other.entity->tag == "ball")
 		{
-			p2Score++;
-			rightText->text = std::to_string(p2Score);
-		}
-		else
-		{
-			p1Score++;
-			leftText->text = std::to_string(p1Score);
-		}
+			//Destroy ball
+			pongScene->DestroyEntity(other.entity);
 
-		Entity* newBall = createBall();
-		pongScene->AddEntity(newBall);
-		ball = newBall;
+			// Tally score
+			if (player == PLAYER1)
+			{
+				p2Score++;
+				rightText->text = std::to_string(p2Score);
+			}
+			else
+			{
+				p1Score++;
+				leftText->text = std::to_string(p1Score);
+			}
+
+			//Spawn new ball
+			Entity* newBall = createBall();
+			pongScene->AddEntity(newBall);
+			ball = newBall;
+		}
 	}
 
 	Player player;
 };
 
+// Component for playing a sound effect on collision
 class CollideSoundEffect : public Component {
 public:
 	CollideSoundEffect(std::string pathToEffect) {
@@ -136,13 +141,16 @@ public:
 	void initialize() override {}
 	void onCollide(const Collider& other) override
 	{
-		if (other.entity->tag != "ball") return;
-		sound->playAudio();
+		if (other.entity->tag == "ball")
+		{
+			sound->playAudio();
+		}
 	}
 
 	unique_ptr<SoundPlayer> sound;
 };
 
+// Construct paddle for a corresponding a player type
 Entity* createPaddle(Player player)
 {
 	// Create paddle and add to scene
@@ -159,7 +167,7 @@ Entity* createPaddle(Player player)
 	return paddle;
 }
 
-// Create upper and lower walls, and side walls that keep score tracking
+// Create ball with initial randomized velocity
 Entity* createBall()
 {
 	Entity* newBall = new Entity("ball");
@@ -172,7 +180,7 @@ Entity* createBall()
 	PhysicsBody* physics = new PhysicsBody();
 	newBall->addComponent(physics);
 
-	// Randomize direction
+	// Randomize direction and speed
 	int direction = rand() % 2 == 0 ? -1 : 1;
 	physics->velocity.x = X_SPEED * direction;
 	physics->velocity.y = MIN_Y_SPEED + (rand() % static_cast<int>(MAX_Y_SPEED - MIN_Y_SPEED + 1)) * direction;
@@ -180,6 +188,7 @@ Entity* createBall()
 	return newBall;
 }
 
+// Create a floor/ceiling object with sound effect on collision
 Entity* createFloorCeilingWall()
 {
 	Entity* wall = new Entity();
@@ -188,6 +197,7 @@ Entity* createFloorCeilingWall()
 	return wall;
 }
 
+// Create a side walls with sound effect and score tallying on collision
 Entity* createSideWalls(Player player)
 {
 	Entity* wall = new Entity();
@@ -197,6 +207,7 @@ Entity* createSideWalls(Player player)
 	return wall;
 }
 
+// Create center line visual object
 Entity* createCenterLine()
 {
 	Entity* line = new Entity();
