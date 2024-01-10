@@ -8,186 +8,206 @@
 using namespace std;
 using namespace SimpleECS;
 
+// Environment parameters
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_WIDTH = 640;
 const int WALL_THICKNESS = 50000;
 const int PADDLE_LENGTH = 45;
 
-int leftScore = 0;
-int rightScore = 0;
+// Ball parameters
+const int MAX_Y_SPEED = 600;
+const int MIN_Y_SPEED = 400;
+const int X_SPEED = 300;
 
+// Score tracking
+int p1Score = 0;
+int p2Score = 0;
+
+// Globals
 FontRenderer* leftText;
 FontRenderer* rightText;
+Scene* pongScene;
+Entity* ball;
 
+enum Player {
+	PLAYER1,
+	PLAYER2,
+	COMPUTER1,
+	COMPUTER2,
+};
+
+// Forward declares
 Entity* createBall();
 
 // Component for controlling paddle movement manually
 class PaddleController : public Component {
-
-	bool isPlayer1;
 public:
-	PaddleController(bool isPlayer1) : isPlayer1(isPlayer1) {};
+	PaddleController(Player player) : player(player) {};
 	
 	void initialize() {}
 
+	void aiControl(bool& downPressed, bool& upPressed)
+	{
+		if ((ball->transform.position.x > 0 && player == COMPUTER2) ||
+			(ball->transform.position.x < 0 && player == COMPUTER1))
+		{
+			if (ball->transform.position.y > entity->transform.position.y)
+			{
+				upPressed = true;
+				downPressed = false;
+			}
+			else
+			{
+				downPressed = true;
+				upPressed = false;
+			}
+		}
+	}
+
 	void update() override
 	{
-		if (!isPlayer1)
+		bool downPressed = player == PLAYER1 ?	Input::getKeyDown(KeyCode::KEY_S) :
+												Input::getKeyDown(KeyCode::KEY_DOWN_ARROW);
+		bool upPressed	= player == PLAYER1 ?	Input::getKeyDown(KeyCode::KEY_W) : 
+												Input::getKeyDown(KeyCode::KEY_UP_ARROW);
+		if(player == COMPUTER1 || player == COMPUTER2) 
 		{
-			if (Input::getKeyDown(KeyCode::KEY_DOWN_ARROW) 
-				&& entity->transform.position.y > -SCREEN_HEIGHT/2 + PADDLE_LENGTH)
-			{
-				entity->transform.position.y -= 3;
-			}
-			else if (Input::getKeyDown(KeyCode::KEY_UP_ARROW)
-				&& entity->transform.position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
-			{
-				entity->transform.position.y += 3;
-			}
+			aiControl(downPressed, upPressed);
 		}
-		else
+
+		if (upPressed && downPressed)
 		{
-			if (Input::getKeyDown(KeyCode::KEY_S)
-				&& entity->transform.position.y > -SCREEN_HEIGHT / 2 + PADDLE_LENGTH)
-			{
-				entity->transform.position.y -= 3;
-			}
-			else if (Input::getKeyDown(KeyCode::KEY_W)
-				&& entity->transform.position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
-			{
-				entity->transform.position.y += 3;
-			}
+			// do nothing
 		}
-	}
-};
-
-// Component for giving ball initial velocity and outputting collision information
-class BallController : public Component {
-public:	
-	const bool CONTROL_ENABLE = false;
-
-	void initialize() override
-	{
-		// Set references and starting velocity
-		phys = entity->getComponent<PhysicsBody>();
-
-		const int MAX_SPEED = 400;
-		const int MIN_SPEED = 200;
-		phys->velocity.x = MIN_SPEED + (rand() % static_cast<int>(MAX_SPEED - MIN_SPEED + 1))/2;
-		phys->velocity.y = MIN_SPEED + (rand() % static_cast<int>(MAX_SPEED - MIN_SPEED + 1));
-	}
-
-	void update() override {}
-
-	void onCollide(const Collision& collide) override
-	{
-		cout << "Collision!" << endl;
-		cout << "x : " << collide.normal.x << " ";
-		cout << "y : " << collide.normal.y << " ";
-		cout << "penDepth : " << collide.penetration << " ";
+		else if (upPressed && entity->transform.position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
+		{
+			entity->transform.position.y += 3;
+		}
+		else if (downPressed && entity->transform.position.y > -SCREEN_HEIGHT / 2 + PADDLE_LENGTH)
+		{
+			entity->transform.position.y -= 3;
+		}
 	}
 
 private:
-	PhysicsBody* phys = nullptr;
+	Player player;
 };
 
 // Component for registering score
 class BoundScoreRegister : public Component {
 public: 
-	BoundScoreRegister(bool isPlayerLeft, Scene* activeScene) 
-		: isPlayerLeft(isPlayerLeft), activeScene(activeScene) {}
+	BoundScoreRegister(Player player) : player(player) {}
 	void update() override {}
 	void initialize() override {}
 	void onCollide(const Collider& other) override 
 	{
 		if (other.entity->tag != "ball") return;
 
-		// Ball has collided. Add score, destroy ball and respawn
-		activeScene->DestroyEntity(other.entity);
+		// Ball has collided. Tally score, destroy ball and respawn
+		pongScene->DestroyEntity(other.entity);
 		
-		if (isPlayerLeft)
+		if (player == PLAYER1)
 		{
-			leftScore++;
-			leftText->text = std::to_string(leftScore);
+			p2Score++;
+			rightText->text = std::to_string(p2Score);
 		}
 		else
 		{
-			rightScore++;
-			rightText->text = std::to_string(rightScore);
+			p1Score++;
+			leftText->text = std::to_string(p1Score);
 		}
 
-		Entity* ball = createBall();
-		activeScene->AddEntity(ball);
-		ball->getComponent<BallController>()->initialize();
+		Entity* newBall = createBall();
+		pongScene->AddEntity(newBall);
+		ball = newBall;
 	}
 
-	bool isPlayerLeft;
-	Scene* activeScene;
+	Player player;
 };
 
-Entity* createPaddle(bool isLeft)
+Entity* createPaddle(Player player)
 {
-	// Create left paddle and add to scene
+	// Create paddle and add to scene
 	Entity* paddle = new Entity();
 
 	paddle->addComponent(new RectangleRenderer(10, PADDLE_LENGTH, Color(0xFF, 0xFF, 0xFF)));
-	paddle->addComponent(new PaddleController(isLeft));
+	paddle->addComponent(new PaddleController(player));
 	paddle->addComponent(new BoxCollider(10, PADDLE_LENGTH));
 
-	paddle->transform.position.x = isLeft ? -SCREEN_WIDTH / 2 + 20 : SCREEN_WIDTH / 2 - 20;
+	// Position differently based on player
+	paddle->transform.position.x = player == PLAYER1 || player == COMPUTER1 ? -SCREEN_WIDTH / 2 + 20 : SCREEN_WIDTH / 2 - 20;
 
 	return paddle;
 }
 
+// Create upper and lower walls, and side walls that keep score tracking
 Entity* createBall()
 {
-	Entity* staticEntity = new Entity("ball");
-	Component* staticComp = new RectangleRenderer(15, 15, Color(0xFF, 0xFF, 0xFF, 0xFF));
-	staticEntity->addComponent(staticComp);
+	Entity* newBall = new Entity("ball");
+	Component* staticComp = new RectangleRenderer(10, 10, Color(0xFF, 0xFF, 0xFF, 0xFF));
+	newBall->addComponent(staticComp);
 
-	Component* staticCollide = new BoxCollider(15, 15);
-	staticEntity->addComponent(staticCollide);
-
-	Component* controller = new BallController();
-	staticEntity->addComponent(controller);
+	Component* staticCollide = new BoxCollider(10, 10);
+	newBall->addComponent(staticCollide);
 
 	PhysicsBody* physics = new PhysicsBody();
-	staticEntity->addComponent(physics);
+	newBall->addComponent(physics);
 
-	return staticEntity;
+	// Randomize direction
+	int direction = rand() % 2 == 0 ? -1 : 1;
+	physics->velocity.x = X_SPEED * direction;
+	physics->velocity.y = MIN_Y_SPEED + (rand() % static_cast<int>(MAX_Y_SPEED - MIN_Y_SPEED + 1)) * direction;
+
+	return newBall;
 }
 
-void createBounds(Scene* scene)
+Entity* createFloorCeilingWall()
 {
-	Entity* topBound = new Entity();
-	topBound->transform.position.y = SCREEN_HEIGHT / 2 + WALL_THICKNESS / 2;
-	Component* topCollide = new BoxCollider(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS);
-	topBound->addComponent(topCollide);
-	
-
-	Entity* bottomBound = new Entity();
-	bottomBound->transform.position.y = -SCREEN_HEIGHT / 2 - WALL_THICKNESS / 2;
-	Component* bottomCollide = new BoxCollider(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS);
-	bottomBound->addComponent(bottomCollide);
-	
-	Entity* leftBound = new Entity();
-	leftBound->transform.position.x = -SCREEN_WIDTH / 2 - WALL_THICKNESS / 2;
-	Component* leftCollide = new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS);
-	leftBound->addComponent(leftCollide);
-	leftBound->addComponent(new BoundScoreRegister(true, scene));
-	
-	Entity* rightBound = new Entity();
-	rightBound->transform.position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
-	Component* rightCollide = new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS);
-	rightBound->addComponent(rightCollide);
-	rightBound->addComponent(new BoundScoreRegister(false, scene));
-	
-	scene->AddEntity(topBound);
-	scene->AddEntity(bottomBound);
-	scene->AddEntity(rightBound);
+	Entity* wall = new Entity();
+	wall->addComponent(new BoxCollider(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS));
+	return wall;
 }
 
-void createText(Scene* scene)
+Entity* createSideWalls(Player player)
+{
+	Entity* wall = new Entity();
+	wall->addComponent(new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS));
+	wall->addComponent(new BoundScoreRegister(player));
+	return wall;
+}
+
+Entity* createCenterLine()
+{
+	Entity* line = new Entity();
+	line->addComponent(new LineRenderer(Vector(0, -240), Vector(0, 300), 5, Color(0xFF, 0xFF, 0xFF), 15));
+	return line;
+}
+
+// Create upper and lower walls, and side walls that keep score tracking
+void addBoundsToScene()
+{
+	// Create and position top and bottom colliders
+	Entity* topBound = createFloorCeilingWall();
+	topBound->transform.position.y = SCREEN_HEIGHT / 2 + WALL_THICKNESS / 2;
+	
+	Entity* bottomBound = createFloorCeilingWall();
+	bottomBound->transform.position.y = -SCREEN_HEIGHT / 2 - WALL_THICKNESS / 2;
+	
+	// Create and position side colliders with score tracker component
+	Entity* leftBound = createSideWalls(PLAYER1);
+	leftBound->transform.position.x = -SCREEN_WIDTH / 2 - WALL_THICKNESS / 2;
+
+	Entity* rightBound = createSideWalls(PLAYER2);
+	rightBound->transform.position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
+	
+	pongScene->AddEntity(topBound);
+	pongScene->AddEntity(bottomBound);
+	pongScene->AddEntity(rightBound);
+	pongScene->AddEntity(leftBound);
+}
+
+// Create and position score text
+void createText()
 {
 	Entity* leftScore = new Entity();
 	leftScore->transform.position = Vector(-SCREEN_WIDTH / 4, 200);
@@ -201,8 +221,8 @@ void createText(Scene* scene)
 	rightText->color = Color(0xFF, 0xFF, 0xFF, 0xFF);
 	rightScore->addComponent(rightText);
 
-	scene->AddEntity(leftScore);
-	scene->AddEntity(rightScore);
+	pongScene->AddEntity(leftScore);
+	pongScene->AddEntity(rightScore);
 }
 
 int main() {
@@ -210,22 +230,22 @@ int main() {
 	
 	// Setup game
 	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
-	Scene* startScene = new Scene(Color(0,0,0,255));
-	game.addScene(startScene);
-	createBounds(startScene);
-	createText(startScene);
+	pongScene = new Scene(Color(0,0,0,255));
+	game.addScene(pongScene);
+	addBoundsToScene();
+	createText();
 
 	// Create center line
-	Entity* line = new Entity();
-	line->addComponent(new LineRenderer(Vector(0, -240), Vector(0, 300), 5, Color(0xFF, 0xFF, 0xFF), 15));
-	startScene->AddEntity(line);
+	pongScene->AddEntity(createCenterLine());
 
 	// Create paddles
-	startScene->AddEntity(createPaddle(false));
-	startScene->AddEntity(createPaddle(true));
+	pongScene->AddEntity(createPaddle(COMPUTER1));
+	pongScene->AddEntity(createPaddle(COMPUTER2));
 
-	// Create moveable Square and add to scene
-	startScene->AddEntity(createBall());	
+	// Create ball
+	Entity* newBall = createBall();
+	pongScene->AddEntity(newBall);
+	ball = newBall;
 
 	// Start game loop
 	game.startGame();
