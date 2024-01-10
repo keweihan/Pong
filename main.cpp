@@ -10,16 +10,22 @@
 using namespace std;
 using namespace SimpleECS;
 
+// Asset paths
+const string FONT_FILE		= "bit9x9.ttf";
+const string SOUND_PADDLE	= "PongPaddle.wav";
+const string SOUND_WALL		= "PongBlip1.wav";
+const string SOUND_SCORE	= "PongScore.wav";
+
 // Environment parameters
-const int SCREEN_HEIGHT = 480;
-const int SCREEN_WIDTH = 640;
-const int WALL_THICKNESS = 50000;
-const int PADDLE_LENGTH = 45;
+const int SCREEN_HEIGHT		= 480;
+const int SCREEN_WIDTH		= 640;
+const int WALL_THICKNESS	= 50000;
+const int PADDLE_LENGTH		= 45;
 
 // Ball parameters
-const int MAX_Y_SPEED = 600;
-const int MIN_Y_SPEED = 400;
-const int X_SPEED = 300;
+const int MAX_Y_SPEED	= 600;
+const int MIN_Y_SPEED	= 400;
+const int X_SPEED		= 300;
 
 // Score tracking
 int p1Score = 0;
@@ -159,7 +165,7 @@ Entity* createPaddle(PlayerType player)
 	paddle->addComponent(new RectangleRenderer(10, PADDLE_LENGTH, Color(0xFF, 0xFF, 0xFF)));
 	paddle->addComponent(new PaddleController(player));
 	paddle->addComponent(new BoxCollider(10, PADDLE_LENGTH));
-	paddle->addComponent(new CollideSoundEffect("PongPaddle.wav"));
+	paddle->addComponent(new CollideSoundEffect(SOUND_PADDLE));
 
 	// Position differently based on player
 	paddle->transform.position.x = player == PLAYER1 || player == COMPUTER1 ? -SCREEN_WIDTH / 2 + 20 : SCREEN_WIDTH / 2 - 20;
@@ -193,7 +199,7 @@ Entity* createFloorCeilingWall()
 {
 	Entity* wall = new Entity();
 	wall->addComponent(new BoxCollider(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS));
-	wall->addComponent(new CollideSoundEffect("PongBlip1.wav"));
+	wall->addComponent(new CollideSoundEffect(SOUND_WALL));
 	return wall;
 }
 
@@ -203,7 +209,7 @@ Entity* createSideWalls(PlayerType player)
 	Entity* wall = new Entity();
 	wall->addComponent(new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS));
 	wall->addComponent(new BoundScoreRegister(player));
-	wall->addComponent(new CollideSoundEffect("PongScore.wav"));
+	wall->addComponent(new CollideSoundEffect(SOUND_SCORE));
 	return wall;
 }
 
@@ -243,13 +249,13 @@ void addScoreCounters()
 {
 	Entity* leftScore = new Entity();
 	leftScore->transform.position = Vector(-SCREEN_WIDTH / 4, 200);
-	leftText = new FontRenderer("0", "bit9x9.ttf", 54);
+	leftText = new FontRenderer("0", FONT_FILE, 54);
 	leftText->color = Color(0xFF, 0xFF, 0xFF, 0xFF);
 	leftScore->addComponent(leftText);
 
 	Entity* rightScore = new Entity();
 	rightScore->transform.position = Vector(SCREEN_WIDTH / 4, 200);;
-	rightText = new FontRenderer("0", "bit9x9.ttf", 54);
+	rightText = new FontRenderer("0", FONT_FILE, 54);
 	rightText->color = Color(0xFF, 0xFF, 0xFF, 0xFF);
 	rightScore->addComponent(rightText);
 
