@@ -11,10 +11,10 @@ using namespace std;
 using namespace SimpleECS;
 
 // Asset paths
-const string FONT_FILE		= "bit9x9.ttf";
-const string SOUND_PADDLE	= "PongPaddle.wav";
-const string SOUND_WALL		= "PongBlip1.wav";
-const string SOUND_SCORE	= "PongScore.wav";
+const string FONT_FILE		= "assets/bit9x9.ttf";
+const string SOUND_PADDLE	= "assets/PongPaddle.wav";
+const string SOUND_WALL		= "assets/PongBlip1.wav";
+const string SOUND_SCORE	= "assets/PongScore.wav";
 
 // Environment parameters
 const int SCREEN_HEIGHT		= 480;
@@ -25,7 +25,7 @@ const int PADDLE_LENGTH		= 45;
 // Ball parameters
 const int MAX_Y_SPEED	= 600;
 const int MIN_Y_SPEED	= 400;
-const int X_SPEED		= 300;
+const int X_SPEED		= 400;
 
 // Score tracking
 int p1Score = 0;
