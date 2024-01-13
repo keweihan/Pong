@@ -1,4 +1,8 @@
+/*
+Pong implementation using SimpleECS.
 
+Kewei Han
+*/
 #include <SimpleECS_Core.h>
 #include <iostream>
 #include <cstdlib>
@@ -17,8 +21,8 @@ const string SOUND_WALL		= "assets/PongBlip1.wav";
 const string SOUND_SCORE	= "assets/PongScore.wav";
 
 // Environment parameters
-const int SCREEN_HEIGHT		= 480;
-const int SCREEN_WIDTH		= 640;
+const int SCREEN_HEIGHT		= 540;
+const int SCREEN_WIDTH		= 960;
 const int WALL_THICKNESS	= 50000;
 const int PADDLE_LENGTH		= 45;
 
@@ -217,7 +221,7 @@ Entity* createSideWalls(PlayerType player)
 Entity* createCenterLine()
 {
 	Entity* line = new Entity();
-	line->addComponent(new LineRenderer(Vector(0, -240), Vector(0, 300), 5, Color(0xFF, 0xFF, 0xFF), 15));
+	line->addComponent(new LineRenderer(Vector(0, -SCREEN_HEIGHT), Vector(0, SCREEN_HEIGHT), 5, Color(0xFF, 0xFF, 0xFF), 15));
 	return line;
 }
 
