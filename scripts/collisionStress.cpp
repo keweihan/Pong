@@ -20,10 +20,9 @@ const int WALL_THICKNESS	= 50000;
 
 // Ball parameters
 const int NUM_BALLS = 3;
-const int MAX_SPEED	= 40;
-const int MIN_SPEED	= 40;
-const int X_SPEED		= 30;
-const int SIDE_LENGTH = 20;
+const int MAX_SPEED	= 90;
+const int MIN_SPEED	= 90;
+const int SIDE_LENGTH = 60;
 
 // Globals
 Scene* pongScene;
@@ -33,6 +32,7 @@ public:
 
 	void initialize() {
 		textRender = entity->getComponent<FontRenderer>();
+		entity->transform.position = Vector(0, 0);
 	};
 
 	void update() {
@@ -42,10 +42,25 @@ public:
 		string text = "Average FPS: " + std::to_string(avgFPS);
 
 		textRender->text = text;
-		entity->transform.position = Vector(0, 0);
 	}
 
 	uint64_t framesPassed = 0;
+	FontRenderer* textRender = nullptr;
+};
+
+class TimeCounter : public Component {
+public:
+
+	void initialize() {
+		textRender = entity->getComponent<FontRenderer>();
+		entity->transform.position = Vector(0, -50);
+	};
+
+	void update() {
+		string text = "Time: " + std::to_string(Timer::getProgramLifetime()/1000);
+		textRender->text = text;
+	}
+
 	FontRenderer* textRender = nullptr;
 };
 
@@ -58,14 +73,22 @@ Entity* createFramesCounter()
 	return counter;
 }
 
+Entity* createTimeCounter()
+{
+	Entity* counter = new Entity();
+	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(0xff, 0xff, 0xff, 0xff)));
+	counter->addComponent(new TimeCounter());
+	return counter;
+}
+
 // Create ball with initial position and inbuilt randomized velocity
 Entity* createBall(const int& x, const int &y)
 {
 	Entity* newBall = new Entity("ball");
-	Component* staticComp = new RectangleRenderer(10, 10, Color(0xFF, 0xFF, 0xFF, 0xFF));
+	Component* staticComp = new RectangleRenderer(SIDE_LENGTH, SIDE_LENGTH, Color(0xFF, 0xFF, 0xFF, 0xFF));
 	newBall->addComponent(staticComp);
 
-	Component* staticCollide = new BoxCollider(10, 10);
+	Component* staticCollide = new BoxCollider(SIDE_LENGTH, SIDE_LENGTH);
 	newBall->addComponent(staticCollide);
 
 	PhysicsBody* physics = new PhysicsBody();
@@ -149,6 +172,8 @@ void spawnBalls(const int& numRow, const int& numColumn, const int& num)
 int main() {
 	cout << "Hello World!" << endl;
 	
+	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
+
 	// Create scene
 	pongScene = new Scene(Color(0, 0, 0, 255));
 
@@ -160,10 +185,15 @@ int main() {
 	int test = ceil(NUM_BALLS / columns);
 	spawnBalls(test, columns, NUM_BALLS);
 
+	//Entity* newBall = createBall(90, 90);
+	//pongScene->AddEntity(newBall);
+	//Entity* newBall2 = createBall(90, 100);
+	//pongScene->AddEntity(newBall2);
+
 	pongScene->AddEntity(createFramesCounter());
+	pongScene->AddEntity(createTimeCounter());
 	
 	// Create game with scene
-	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
 	game.setName("Auto Pong");
 	game.addScene(pongScene);
 
