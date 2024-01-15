@@ -21,8 +21,8 @@ const string SOUND_WALL		= "assets/PongBlip1.wav";
 const string SOUND_SCORE	= "assets/PongScore.wav";
 
 // Environment parameters
-const int SCREEN_HEIGHT		= 540;
-const int SCREEN_WIDTH		= 960;
+const int SCREEN_HEIGHT		= 480;
+const int SCREEN_WIDTH		= 640;
 const int WALL_THICKNESS	= 50000;
 const int PADDLE_LENGTH		= 45;
 
@@ -95,11 +95,11 @@ public:
 		// Move paddle based on input and limit movement
 		if (upPressed && entity->transform.position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
 		{
-			entity->transform.position.y += 3;
+			entity->transform.position.y += 0.6 * Timer::getDeltaTime();
 		}
 		else if (downPressed && entity->transform.position.y > -SCREEN_HEIGHT / 2 + PADDLE_LENGTH)
 		{
-			entity->transform.position.y -= 3;
+			entity->transform.position.y -= 0.6 * Timer::getDeltaTime();
 		}
 	}
 

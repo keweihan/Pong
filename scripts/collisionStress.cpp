@@ -16,13 +16,13 @@ using namespace SimpleECS;
 // Environment parameters
 const int SCREEN_HEIGHT		= 540;
 const int SCREEN_WIDTH		= 960;
-const int WALL_THICKNESS	= 50000;
+const int WALL_THICKNESS	= 50;
 
 // Ball parameters
-const int NUM_BALLS = 3;
-const int MAX_SPEED	= 90;
-const int MIN_SPEED	= 90;
-const int SIDE_LENGTH = 60;
+const int NUM_BALLS = 40;
+const int MAX_SPEED	= 150;
+const int MIN_SPEED	= 150;
+const int SIDE_LENGTH = 30;
 
 // Globals
 Scene* pongScene;
@@ -68,7 +68,7 @@ public:
 Entity* createFramesCounter()
 {
 	Entity* counter = new Entity();
-	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(0xff, 0xff,0xff,0xff)));
+	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211,0xff)));
 	counter->addComponent(new FrameCounter());
 	return counter;
 }
@@ -76,7 +76,7 @@ Entity* createFramesCounter()
 Entity* createTimeCounter()
 {
 	Entity* counter = new Entity();
-	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(0xff, 0xff, 0xff, 0xff)));
+	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
 	counter->addComponent(new TimeCounter());
 	return counter;
 }
@@ -145,11 +145,15 @@ void addBounds()
 // Spawn balls with physics in a grid across screen
 void spawnBalls(const int& numRow, const int& numColumn, const int& num)
 {
-	int rowSpacing		= (SCREEN_HEIGHT/numRow);
+	int rowSpacing		= (SCREEN_HEIGHT/ numRow);
 	int columnSpacing	= (SCREEN_WIDTH / numColumn);
 
-	int ySpawnPos = -SCREEN_HEIGHT/2 + rowSpacing/2;
-	int xSpawnPos = -SCREEN_WIDTH/2 + columnSpacing/2;
+	// Center all objects
+	int yOffset = (SCREEN_HEIGHT - rowSpacing * numRow)/2;
+	int xOffset = (SCREEN_WIDTH - columnSpacing * numColumn)/2;
+
+	int ySpawnPos = -SCREEN_HEIGHT/2 + rowSpacing + yOffset;
+	int xSpawnPos = -SCREEN_WIDTH/2 + columnSpacing + xOffset;
 
 	int numSpawned = 0;
 
@@ -165,7 +169,7 @@ void spawnBalls(const int& numRow, const int& numColumn, const int& num)
 		}
 
 		ySpawnPos += rowSpacing;
-		xSpawnPos = -SCREEN_WIDTH / 2 + columnSpacing / 2;
+		xSpawnPos = -SCREEN_WIDTH / 2 + columnSpacing + xOffset;
 	}
 }
 
@@ -182,8 +186,8 @@ int main() {
 
 	// Get a grid of squares
 	int columns = ceil(sqrt(NUM_BALLS / ((double)SCREEN_HEIGHT / (double)SCREEN_WIDTH)));
-	int test = ceil(NUM_BALLS / columns);
-	spawnBalls(test, columns, NUM_BALLS);
+	int rows = ceil(NUM_BALLS / columns);
+	spawnBalls(rows, columns, NUM_BALLS);
 
 	//Entity* newBall = createBall(90, 90);
 	//pongScene->AddEntity(newBall);
