@@ -19,7 +19,7 @@ const int SCREEN_WIDTH		= 960;
 const int WALL_THICKNESS	= 50;
 
 // Ball parameters
-const int NUM_BALLS = 9000;
+const int NUM_BALLS = 9060;
 const int MAX_SPEED	= 60;
 const int MIN_SPEED	= 30;
 const int SIDE_LENGTH = 3;
@@ -38,7 +38,7 @@ public:
 	void update() {
 		framesPassed++;
 		int64_t lifeTime = Timer::getProgramLifetime();
-		int64_t avgFPS = lifeTime == 0 ? 0 : framesPassed / (Timer::getProgramLifetime() / 1000 + 1);
+		int64_t avgFPS = framesPassed / std::max(static_cast<int>(Timer::getProgramLifetime()) / 1000, 1);
 		string text = "Average FPS: " + std::to_string(avgFPS);
 
 		textRender->text = text;
