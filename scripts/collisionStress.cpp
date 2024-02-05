@@ -32,7 +32,7 @@ public:
 
 	void initialize() {
 		textRender = entity->getComponent<FontRenderer>();
-		entity->transform.position = Vector(0, 0);
+		entity->transform.position = Vector(0, -25);
 	};
 
 	void update() {
@@ -53,7 +53,7 @@ public:
 
 	void initialize() {
 		textRender = entity->getComponent<FontRenderer>();
-		entity->transform.position = Vector(0, 50);
+		entity->transform.position = Vector(0, 25);
 	};
 
 	void update() {
@@ -80,7 +80,7 @@ public:
 
 	void initialize() {
 		textRender = entity->getComponent<FontRenderer>();
-		entity->transform.position = Vector(0, -50);
+		entity->transform.position = Vector(0, -75);
 	};
 
 	void update() {
@@ -90,6 +90,32 @@ public:
 
 	FontRenderer* textRender = nullptr;
 };
+
+class ObjectCounter : public Component {
+public:
+	ObjectCounter(int numObj) : num(numObj) {}
+
+	void initialize() {
+		textRender = entity->getComponent<FontRenderer>();
+		entity->transform.position = Vector(0, 75);
+	};
+
+	void update() {
+		string text = std::to_string(num) + " Objects";
+		textRender->text = text;
+	}
+
+	FontRenderer* textRender = nullptr;
+	int num = 0;
+};
+
+Entity* createObjCounter(int num)
+{
+	Entity* counter = new Entity();
+	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
+	counter->addComponent(new ObjectCounter(num));
+	return counter;
+}
 
 Entity* createCurrFramesCounter()
 {
@@ -177,7 +203,8 @@ void addBounds()
 }
 
 // Spawn balls with physics in a grid across screen
-void spawnBalls(const int& numRow, const int& numColumn, const int& num)
+// Returns number spawned
+int spawnBalls(const int& numRow, const int& numColumn, const int& num)
 {
 	int rowSpacing		= (SCREEN_HEIGHT/ numRow);
 	int columnSpacing	= (SCREEN_WIDTH / numColumn);
@@ -205,6 +232,7 @@ void spawnBalls(const int& numRow, const int& numColumn, const int& num)
 		ySpawnPos += rowSpacing;
 		xSpawnPos = -SCREEN_WIDTH / 2 + columnSpacing + xOffset;
 	}
+	return numSpawned;
 }
 
 int main() {
@@ -221,7 +249,7 @@ int main() {
 	// Get a grid of squares
 	int columns = ceil(sqrt(NUM_BALLS / ((double)SCREEN_HEIGHT / (double)SCREEN_WIDTH)));
 	int rows = ceil(NUM_BALLS / columns);
-	spawnBalls(rows, columns, NUM_BALLS);
+	int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
 
 	//Entity* newBall = createBall(90, 90);
 	//pongScene->AddEntity(newBall);
@@ -231,7 +259,8 @@ int main() {
 	pongScene->AddEntity(createCurrFramesCounter());
 	pongScene->AddEntity(createFramesCounter());
 	pongScene->AddEntity(createTimeCounter());
-	
+	pongScene->AddEntity(createObjCounter(numSpawned));
+
 	// Create game with scene
 	game.setName("Auto Pong");
 	game.addScene(pongScene);
