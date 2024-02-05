@@ -95,11 +95,11 @@ public:
 		// Move paddle based on input and limit movement
 		if (upPressed && entity->transform.position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
 		{
-			entity->transform.position.y += 0.6 * Timer::getDeltaTime();
+			entity->transform.position.y += 0.4 * Timer::getDeltaTime();
 		}
 		else if (downPressed && entity->transform.position.y > -SCREEN_HEIGHT / 2 + PADDLE_LENGTH)
 		{
-			entity->transform.position.y -= 0.6 * Timer::getDeltaTime();
+			entity->transform.position.y -= 0.4 * Timer::getDeltaTime();
 		}
 	}
 

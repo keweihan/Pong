@@ -19,15 +19,15 @@ const int SCREEN_WIDTH		= 960;
 const int WALL_THICKNESS	= 50;
 
 // Ball parameters
-const int NUM_BALLS = 40;
-const int MAX_SPEED	= 150;
-const int MIN_SPEED	= 150;
-const int SIDE_LENGTH = 30;
+const int NUM_BALLS = 9000;
+const int MAX_SPEED	= 60;
+const int MIN_SPEED	= 30;
+const int SIDE_LENGTH = 3;
 
 // Globals
 Scene* pongScene;
 
-class FrameCounter : public Component {
+class AvgFrameCounter : public Component {
 public:
 
 	void initialize() {
@@ -48,6 +48,33 @@ public:
 	FontRenderer* textRender = nullptr;
 };
 
+class CurrFrameCounter : public Component {
+public:
+
+	void initialize() {
+		textRender = entity->getComponent<FontRenderer>();
+		entity->transform.position = Vector(0, 50);
+	};
+
+	void update() {
+		frameCount++;
+		int currSecond = Timer::getProgramLifetime() / 1000;
+		if (currSecond > prevSecond)
+		{
+			displayFrames = frameCount;
+			frameCount = 0;
+			prevSecond = currSecond;
+		};
+		
+		string text = "Current FPS: " + std::to_string(displayFrames);
+		textRender->text = text;
+	}
+	uint64_t displayFrames = 0;
+	uint64_t prevSecond = 0;
+	uint64_t frameCount = 0;
+	FontRenderer* textRender = nullptr;
+};
+
 class TimeCounter : public Component {
 public:
 
@@ -64,12 +91,19 @@ public:
 	FontRenderer* textRender = nullptr;
 };
 
+Entity* createCurrFramesCounter()
+{
+	Entity* counter = new Entity();
+	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
+	counter->addComponent(new CurrFrameCounter());
+	return counter;
+}
 
 Entity* createFramesCounter()
 {
 	Entity* counter = new Entity();
 	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211,0xff)));
-	counter->addComponent(new FrameCounter());
+	counter->addComponent(new AvgFrameCounter());
 	return counter;
 }
 
@@ -85,7 +119,7 @@ Entity* createTimeCounter()
 Entity* createBall(const int& x, const int &y)
 {
 	Entity* newBall = new Entity("ball");
-	Component* staticComp = new RectangleRenderer(SIDE_LENGTH, SIDE_LENGTH, Color(0xFF, 0xFF, 0xFF, 0xFF));
+	Component* staticComp = new RectangleRenderer(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
 	newBall->addComponent(staticComp);
 
 	Component* staticCollide = new BoxCollider(SIDE_LENGTH, SIDE_LENGTH);
@@ -152,8 +186,8 @@ void spawnBalls(const int& numRow, const int& numColumn, const int& num)
 	int yOffset = (SCREEN_HEIGHT - rowSpacing * numRow)/2;
 	int xOffset = (SCREEN_WIDTH - columnSpacing * numColumn)/2;
 
-	int ySpawnPos = -SCREEN_HEIGHT/2 + rowSpacing + yOffset;
-	int xSpawnPos = -SCREEN_WIDTH/2 + columnSpacing + xOffset;
+	int ySpawnPos = -SCREEN_HEIGHT/2 + rowSpacing + yOffset - 50;
+	int xSpawnPos = -SCREEN_WIDTH/2 + columnSpacing + xOffset - 50;
 
 	int numSpawned = 0;
 
@@ -194,6 +228,7 @@ int main() {
 	//Entity* newBall2 = createBall(90, 100);
 	//pongScene->AddEntity(newBall2);
 
+	pongScene->AddEntity(createCurrFramesCounter());
 	pongScene->AddEntity(createFramesCounter());
 	pongScene->AddEntity(createTimeCounter());
 	
