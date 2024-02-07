@@ -14,8 +14,8 @@ using namespace std;
 using namespace SimpleECS;
 
 // Environment parameters
-const int SCREEN_HEIGHT		= 720;
-const int SCREEN_WIDTH		= 1280;
+const int SCREEN_HEIGHT		= 540;
+const int SCREEN_WIDTH		= 960;
 const int WALL_THICKNESS	= 50;
 
 // Ball parameters
