@@ -14,18 +14,19 @@ using namespace std;
 using namespace SimpleECS;
 
 // Environment parameters
-const int SCREEN_HEIGHT		= 540;
-const int SCREEN_WIDTH		= 960;
+const int SCREEN_HEIGHT		= 720;
+const int SCREEN_WIDTH		= 1280;
 const int WALL_THICKNESS	= 50;
 
 // Ball parameters
-const int NUM_BALLS = 9060;
+const int NUM_BALLS = 9000;
 const int MAX_SPEED	= 60;
 const int MIN_SPEED	= 30;
 const int SIDE_LENGTH = 3;
+const int RAND_SEED = 42;
 
 // Globals
-Scene* pongScene;
+Scene* mainScene;
 
 class AvgFrameCounter : public Component {
 public:
@@ -196,10 +197,10 @@ void addBounds()
 	Entity* rightBound = createSideWalls();
 	rightBound->transform.position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
 	
-	pongScene->AddEntity(topBound);
-	pongScene->AddEntity(bottomBound);
-	pongScene->AddEntity(rightBound);
-	pongScene->AddEntity(leftBound);
+	mainScene->AddEntity(topBound);
+	mainScene->AddEntity(bottomBound);
+	mainScene->AddEntity(rightBound);
+	mainScene->AddEntity(leftBound);
 }
 
 // Spawn balls with physics in a grid across screen
@@ -213,8 +214,8 @@ int spawnBalls(const int& numRow, const int& numColumn, const int& num)
 	int yOffset = (SCREEN_HEIGHT - rowSpacing * numRow)/2;
 	int xOffset = (SCREEN_WIDTH - columnSpacing * numColumn)/2;
 
-	int ySpawnPos = -SCREEN_HEIGHT/2 + rowSpacing + yOffset - 50;
-	int xSpawnPos = -SCREEN_WIDTH/2 + columnSpacing + xOffset - 50;
+	int ySpawnPos = -SCREEN_HEIGHT/2 + rowSpacing + yOffset;
+	int xSpawnPos = -SCREEN_WIDTH/2 + columnSpacing + xOffset;
 
 	int numSpawned = 0;
 
@@ -223,7 +224,7 @@ int spawnBalls(const int& numRow, const int& numColumn, const int& num)
 		for (int j = 0; j < numColumn; ++j)
 		{
 			Entity* newBall = createBall(xSpawnPos, ySpawnPos);
-			pongScene->AddEntity(newBall);
+			mainScene->AddEntity(newBall);
 			xSpawnPos += columnSpacing;
 
 			numSpawned++;
@@ -237,11 +238,13 @@ int spawnBalls(const int& numRow, const int& numColumn, const int& num)
 
 int main() {
 	cout << "Hello World!" << endl;
+
+	srand(RAND_SEED);
 	
 	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	// Create scene
-	pongScene = new Scene(Color(0, 0, 0, 255));
+	mainScene = new Scene(Color(0, 0, 0, 255));
 
 	// Populate scene
 	addBounds();
@@ -251,19 +254,14 @@ int main() {
 	int rows = ceil(NUM_BALLS / columns);
 	int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
 
-	//Entity* newBall = createBall(90, 90);
-	//pongScene->AddEntity(newBall);
-	//Entity* newBall2 = createBall(90, 100);
-	//pongScene->AddEntity(newBall2);
-
-	pongScene->AddEntity(createCurrFramesCounter());
-	pongScene->AddEntity(createFramesCounter());
-	pongScene->AddEntity(createTimeCounter());
-	pongScene->AddEntity(createObjCounter(numSpawned));
+	mainScene->AddEntity(createCurrFramesCounter());
+	mainScene->AddEntity(createFramesCounter());
+	mainScene->AddEntity(createTimeCounter());
+	mainScene->AddEntity(createObjCounter(numSpawned));
 
 	// Create game with scene
-	game.setName("Auto Pong");
-	game.addScene(pongScene);
+	game.setName("Collider Stress Test");
+	game.addScene(mainScene);
 
 	// Start game loop
 	game.startGame();
