@@ -67,7 +67,7 @@ public:
 		bool comp1Active = ball->transform.position.x < 0 && player == COMPUTER1;
 		if (comp2Active || comp1Active)
 		{
-			if (ball->transform.position.y > entity->transform.position.y)
+			if (ball->transform.position.y > entity->transform->position.y)
 			{
 				upPressed = true;
 				downPressed = false;
@@ -93,13 +93,13 @@ public:
 		}
 
 		// Move paddle based on input and limit movement
-		if (upPressed && entity->transform.position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
+		if (upPressed && entity->transform->position.y < SCREEN_HEIGHT / 2 - PADDLE_LENGTH)
 		{
-			entity->transform.position.y += 0.4 * Timer::getDeltaTime();
+			entity->transform->position.y += 0.4 * Timer::getDeltaTime();
 		}
-		else if (downPressed && entity->transform.position.y > -SCREEN_HEIGHT / 2 + PADDLE_LENGTH)
+		else if (downPressed && entity->transform->position.y > -SCREEN_HEIGHT / 2 + PADDLE_LENGTH)
 		{
-			entity->transform.position.y -= 0.4 * Timer::getDeltaTime();
+			entity->transform->position.y -= 0.4 * Timer::getDeltaTime();
 		}
 	}
 

@@ -254,10 +254,10 @@ int main() {
 	int rows = ceil(NUM_BALLS / columns);
 	int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
 
-	mainScene->AddEntity(createCurrFramesCounter());
-	mainScene->AddEntity(createFramesCounter());
-	mainScene->AddEntity(createTimeCounter());
-	mainScene->AddEntity(createObjCounter(numSpawned));
+	//mainScene->AddEntity(createCurrFramesCounter());
+	//mainScene->AddEntity(createFramesCounter());
+	//mainScene->AddEntity(createTimeCounter());
+	//mainScene->AddEntity(createObjCounter(numSpawned));
 
 	// Create game with scene
 	game.setName("Collider Stress Test");
