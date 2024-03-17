@@ -19,9 +19,9 @@ const int SCREEN_WIDTH		= 960;
 const int WALL_THICKNESS	= 50;
 
 // Ball parameters
-const int NUM_BALLS = 9000;
-const int MAX_SPEED	= 60;
-const int MIN_SPEED	= 30;
+const int NUM_BALLS = 15000;
+const int MAX_SPEED	= 45;
+const int MIN_SPEED	= 20;
 const int SIDE_LENGTH = 3;
 const int RAND_SEED = 42;
 
@@ -46,7 +46,7 @@ public:
 	}
 
 	uint64_t framesPassed = 0;
-	FontRenderer* textRender;
+	Handle<FontRenderer> textRender;
 };
 
 class CurrFrameCounter : public Component {
@@ -73,7 +73,7 @@ public:
 	uint64_t displayFrames = 0;
 	uint64_t prevSecond = 0;
 	uint64_t frameCount = 0;
-	FontRenderer* textRender;
+	Handle<FontRenderer> textRender;
 };
 
 class TimeCounter : public Component {
@@ -89,7 +89,7 @@ public:
 		textRender->text = text;
 	}
 
-	FontRenderer* textRender;
+	Handle<FontRenderer> textRender;
 };
 
 class ObjectCounter : public Component {
@@ -106,7 +106,7 @@ public:
 		textRender->text = text;
 	}
 
-	FontRenderer* textRender;
+	Handle<FontRenderer> textRender;
 	int num = 0;
 };
 
@@ -143,97 +143,87 @@ Entity* createTimeCounter()
 }
 
 // Create ball with initial position and inbuilt randomized velocity
-//Entity* createBall(const int& x, const int &y)
-//{
-//	Entity* newBall = mainScene->createEntity();
-//	Component* staticComp = new RectangleRenderer(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
-//	newBall->addComponent(staticComp);
-//
-//	Component* staticCollide = new BoxCollider(SIDE_LENGTH, SIDE_LENGTH);
-//	newBall->addComponent(staticCollide);
-//
-//	PhysicsBody* physics = new PhysicsBody();
-//	newBall->addComponent(physics);
-//
-//	// Set position
-//	newBall->transform.position.x = x;
-//	newBall->transform.position.y = y;
-//
-//	// Randomize direction and speed
-//	physics->velocity.x = (MIN_SPEED + (rand() % static_cast<int>(MAX_SPEED - MIN_SPEED + 1))) * (rand() % 2 == 0 ? -1 : 1);
-//	physics->velocity.y = (MIN_SPEED + (rand() % static_cast<int>(MAX_SPEED - MIN_SPEED + 1))) * (rand() % 2 == 0 ? -1 : 1);
-//
-//	return newBall;
-//}
-//
-//// Create a floor/ceiling object with sound effect on collision
-//Entity* createFloorCeilingWall()
-//{
-//	Entity* wall = new Entity();
-//	wall->addComponent(new BoxCollider(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS));
-//	return wall;
-//}
-//
-//// Create a side walls with sound effect and score tallying on collision
-//Entity* createSideWalls()
-//{
-//	Entity* wall = new Entity();
-//	wall->addComponent(new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS));
-//	return wall;
-//}
-//
-//// Create upper and lower walls in scene, and side walls that keep score tracking
-//void addBounds()
-//{
-//	Entity* topBound = createFloorCeilingWall();
-//	topBound->transform.position.y = SCREEN_HEIGHT / 2 + WALL_THICKNESS / 2;
-//	
-//	Entity* bottomBound = createFloorCeilingWall();
-//	bottomBound->transform.position.y = -SCREEN_HEIGHT / 2 - WALL_THICKNESS / 2;
-//	
-//	Entity* leftBound = createSideWalls();
-//	leftBound->transform.position.x = -SCREEN_WIDTH / 2 - WALL_THICKNESS / 2;
-//
-//	Entity* rightBound = createSideWalls();
-//	rightBound->transform.position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
-//	
-//	mainScene->AddEntity(topBound);
-//	mainScene->AddEntity(bottomBound);
-//	mainScene->AddEntity(rightBound);
-//	mainScene->AddEntity(leftBound);
-//}
+Entity* createBall(const int& x, const int &y)
+{
+	Entity* newBall = mainScene->createEntity("ball");
+	newBall->addComponent<RectangleRenderer>(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
+	newBall->addComponent<BoxCollider>(SIDE_LENGTH, SIDE_LENGTH);
+	Handle<PhysicsBody> physics = newBall->addComponent<PhysicsBody>();
+
+	// Set position
+	newBall->transform->position.x = x;
+	newBall->transform->position.y = y;
+
+	// Randomize direction and speed
+	physics->velocity.x = (MIN_SPEED + (rand() % static_cast<int>(MAX_SPEED - MIN_SPEED + 1))) * (rand() % 2 == 0 ? -1 : 1);
+	physics->velocity.y = (MIN_SPEED + (rand() % static_cast<int>(MAX_SPEED - MIN_SPEED + 1))) * (rand() % 2 == 0 ? -1 : 1);
+
+	return newBall;
+}
+
+// Create a floor/ceiling object with sound effect on collision
+Entity* createFloorCeilingWall()
+{
+	Entity* wall = mainScene->createEntity();
+	wall->addComponent<BoxCollider>(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS);
+	return wall;
+}
+
+// Create a side walls with sound effect and score tallying on collision
+Entity* createSideWalls()
+{
+	Entity* wall = mainScene->createEntity();
+	wall->addComponent<BoxCollider>(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS);
+	return wall;
+}
+
+// Create upper and lower walls in scene, and side walls that keep score tracking
+void addBounds()
+{
+	Entity* topBound = createFloorCeilingWall();
+	topBound->transform->position.y = SCREEN_HEIGHT / 2 + WALL_THICKNESS / 2;
+	
+	Entity* bottomBound = createFloorCeilingWall();
+	bottomBound->transform->position.y = -SCREEN_HEIGHT / 2 - WALL_THICKNESS / 2;
+	
+	Entity* leftBound = createSideWalls();
+	leftBound->transform->position.x = -SCREEN_WIDTH / 2 - WALL_THICKNESS / 2;
+
+	Entity* rightBound = createSideWalls();
+	rightBound->transform->position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
+}
 
 // Spawn balls with physics in a grid across screen
 // Returns number spawned
-//int spawnBalls(const int& numRow, const int& numColumn, const int& num)
-//{
-//	int rowSpacing		= (SCREEN_HEIGHT/ numRow);
-//	int columnSpacing	= (SCREEN_WIDTH / numColumn);
-//
-//	// Center all objects
-//	int yOffset = (SCREEN_HEIGHT - rowSpacing * numRow)/2;
-//	int xOffset = (SCREEN_WIDTH - columnSpacing * numColumn)/2;
-//
-//	int ySpawnPos = -SCREEN_HEIGHT/2 + rowSpacing + yOffset;
-//	int xSpawnPos = -SCREEN_WIDTH/2 + columnSpacing + xOffset;
-//
-//	int numSpawned = 0;
-//
-//	for (int i = 0; i < numRow && numSpawned < num; ++i)
-//	{
-//		for (int j = 0; j < numColumn; ++j)
-//		{
-//			Entity* newBall = createBall(xSpawnPos, ySpawnPos);
-//			xSpawnPos += columnSpacing;
-//
-//			numSpawned++;
-//		}
-//
-//		ySpawnPos += rowSpacing;
-//		xSpawnPos = -SCREEN_WIDTH / 2 + columnSpacing + xOffset;
-//	}
-//	return numSpawned;
-//}
+int spawnBalls(const int& numRow, const int& numColumn, const int& num)
+{
+	int rowSpacing		= (SCREEN_HEIGHT/ numRow);
+	int columnSpacing	= (SCREEN_WIDTH / numColumn);
+
+	// Center all objects
+	int yOffset = (SCREEN_HEIGHT - rowSpacing * numRow)/2;
+	int xOffset = (SCREEN_WIDTH - columnSpacing * numColumn)/2;
+
+	int ySpawnPos = -SCREEN_HEIGHT/2 + rowSpacing + yOffset;
+	int xSpawnPos = -SCREEN_WIDTH/2 + columnSpacing + xOffset;
+
+	int numSpawned = 0;
+
+	for (int i = 0; i < numRow && numSpawned < num; ++i)
+	{
+		for (int j = 0; j < numColumn; ++j)
+		{
+			Entity* newBall = createBall(xSpawnPos, ySpawnPos);
+			xSpawnPos += columnSpacing;
+
+			numSpawned++;
+		}
+
+		ySpawnPos += rowSpacing;
+		xSpawnPos = -SCREEN_WIDTH / 2 + columnSpacing + xOffset;
+	}
+	return numSpawned;
+}
 
 int main() {
 	try
@@ -247,21 +237,18 @@ int main() {
 		// Create scene
 		mainScene = new Scene(Color(0, 0, 0, 255));
 
-		Entity* ball = mainScene->createEntity();
-		ball->addComponent<RectangleRenderer>(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
+		// Populate scene
+		addBounds();
 
-		//// Populate scene
-		//addBounds();
-
-		//// Get a grid of squares
-		//int columns = ceil(sqrt(NUM_BALLS / ((double)SCREEN_HEIGHT / (double)SCREEN_WIDTH)));
-		//int rows = ceil(NUM_BALLS / columns);
-		//int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
+		// Get a grid of squares
+		int columns = ceil(sqrt(NUM_BALLS / ((double)SCREEN_HEIGHT / (double)SCREEN_WIDTH)));
+		int rows = ceil(NUM_BALLS / columns);
+		int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
 
 		createCurrFramesCounter();
 		createFramesCounter();
 		createTimeCounter();
-		//createObjCounter(numSpawned);
+		createObjCounter(numSpawned);
 
 		// Create game with scene
 		game.setName("Collider Stress Test");
