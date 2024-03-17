@@ -46,87 +46,86 @@ public:
 	}
 
 	uint64_t framesPassed = 0;
-	FontRenderer* textRender = nullptr;
+	FontRenderer* textRender;
 };
 
-//
-//class CurrFrameCounter : public Component {
-//public:
-//
-//	void initialize() {
-//		textRender = entity->getComponent<FontRenderer>();
-//		entity->transform.position = Vector(0, 25);
-//	};
-//
-//	void update() {
-//		frameCount++;
-//		int currSecond = Timer::getProgramLifetime() / 1000;
-//		if (currSecond > prevSecond)
-//		{
-//			displayFrames = frameCount;
-//			frameCount = 0;
-//			prevSecond = currSecond;
-//		};
-//		
-//		string text = "Current FPS: " + std::to_string(displayFrames);
-//		textRender->text = text;
-//	}
-//	uint64_t displayFrames = 0;
-//	uint64_t prevSecond = 0;
-//	uint64_t frameCount = 0;
-//	FontRenderer* textRender = nullptr;
-//};
-//
-//class TimeCounter : public Component {
-//public:
-//
-//	void initialize() {
-//		textRender = entity->getComponent<FontRenderer>();
-//		entity->transform.position = Vector(0, -75);
-//	};
-//
-//	void update() {
-//		string text = "Time: " + std::to_string(Timer::getProgramLifetime()/1000);
-//		textRender->text = text;
-//	}
-//
-//	FontRenderer* textRender = nullptr;
-//};
-//
-//class ObjectCounter : public Component {
-//public:
-//	ObjectCounter(int numObj) : num(numObj) {}
-//
-//	void initialize() {
-//		textRender = entity->getComponent<FontRenderer>();
-//		entity->transform.position = Vector(0, 75);
-//	};
-//
-//	void update() {
-//		string text = std::to_string(num) + " Objects";
-//		textRender->text = text;
-//	}
-//
-//	FontRenderer* textRender = nullptr;
-//	int num = 0;
-//};
-//
-//Entity* createObjCounter(int num)
-//{
-//	Entity* counter = new Entity();
-//	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
-//	counter->addComponent(new ObjectCounter(num));
-//	return counter;
-//}
-//
-//Entity* createCurrFramesCounter()
-//{
-//	Entity* counter = new Entity();
-//	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
-//	counter->addComponent(new CurrFrameCounter());
-//	return counter;
-//}
-//
+class CurrFrameCounter : public Component {
+public:
+
+	void initialize() {
+		textRender = entity->getComponent<FontRenderer>();
+		entity->transform->position = Vector(0, 25);
+	};
+
+	void update() {
+		frameCount++;
+		int currSecond = Timer::getProgramLifetime() / 1000;
+		if (currSecond > prevSecond)
+		{
+			displayFrames = frameCount;
+			frameCount = 0;
+			prevSecond = currSecond;
+		};
+		
+		string text = "Current FPS: " + std::to_string(displayFrames);
+		textRender->text = text;
+	}
+	uint64_t displayFrames = 0;
+	uint64_t prevSecond = 0;
+	uint64_t frameCount = 0;
+	FontRenderer* textRender;
+};
+
+class TimeCounter : public Component {
+public:
+
+	void initialize() {
+		textRender = entity->getComponent<FontRenderer>();
+		entity->transform->position = Vector(0, -75);
+	};
+
+	void update() {
+		string text = "Time: " + std::to_string(Timer::getProgramLifetime()/1000);
+		textRender->text = text;
+	}
+
+	FontRenderer* textRender;
+};
+
+class ObjectCounter : public Component {
+public:
+	ObjectCounter(int numObj) : num(numObj) {}
+
+	void initialize() {
+		textRender = entity->getComponent<FontRenderer>();
+		entity->transform->position = Vector(0, 75);
+	};
+
+	void update() {
+		string text = std::to_string(num) + " Objects";
+		textRender->text = text;
+	}
+
+	FontRenderer* textRender;
+	int num = 0;
+};
+
+Entity* createObjCounter(int num)
+{
+	Entity* counter = mainScene->createEntity();
+	counter->addComponent<FontRenderer>("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff));
+	counter->addComponent<ObjectCounter>(num);
+	return counter;
+}
+
+Entity* createCurrFramesCounter()
+{
+	Entity* counter = mainScene->createEntity();
+	counter->addComponent<FontRenderer>("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff));
+	counter->addComponent<CurrFrameCounter>();
+	return counter;
+}
+
 Entity* createFramesCounter()
 {
 	Entity* counter = mainScene->createEntity();
@@ -134,19 +133,19 @@ Entity* createFramesCounter()
 	counter->addComponent<AvgFrameCounter>();
 	return counter;
 }
-//
-//Entity* createTimeCounter()
-//{
-//	Entity* counter = new Entity();
-//	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
-//	counter->addComponent(new TimeCounter());
-//	return counter;
-//}
-//
-//// Create ball with initial position and inbuilt randomized velocity
+
+Entity* createTimeCounter()
+{
+	Entity* counter = mainScene->createEntity();
+	counter->addComponent<FontRenderer>("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff));
+	counter->addComponent<TimeCounter>();
+	return counter;
+}
+
+// Create ball with initial position and inbuilt randomized velocity
 //Entity* createBall(const int& x, const int &y)
 //{
-//	Entity* newBall = new Entity("ball");
+//	Entity* newBall = mainScene->createEntity();
 //	Component* staticComp = new RectangleRenderer(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
 //	newBall->addComponent(staticComp);
 //
@@ -203,9 +202,9 @@ Entity* createFramesCounter()
 //	mainScene->AddEntity(rightBound);
 //	mainScene->AddEntity(leftBound);
 //}
-//
-//// Spawn balls with physics in a grid across screen
-//// Returns number spawned
+
+// Spawn balls with physics in a grid across screen
+// Returns number spawned
 //int spawnBalls(const int& numRow, const int& numColumn, const int& num)
 //{
 //	int rowSpacing		= (SCREEN_HEIGHT/ numRow);
@@ -225,7 +224,6 @@ Entity* createFramesCounter()
 //		for (int j = 0; j < numColumn; ++j)
 //		{
 //			Entity* newBall = createBall(xSpawnPos, ySpawnPos);
-//			mainScene->AddEntity(newBall);
 //			xSpawnPos += columnSpacing;
 //
 //			numSpawned++;
@@ -238,35 +236,42 @@ Entity* createFramesCounter()
 //}
 
 int main() {
-	cout << "Hello World!" << endl;
+	try
+	{
+		cout << "Hello World!" << endl;
 
-	srand(RAND_SEED);
-	
-	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
+		srand(RAND_SEED);
 
-	// Create scene
-	mainScene = new Scene(Color(0, 0, 0, 255));
+		Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	Entity* ball = mainScene->createEntity();
-	ball->addComponent<RectangleRenderer>(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
-	
-	//// Populate scene
-	//addBounds();
+		// Create scene
+		mainScene = new Scene(Color(0, 0, 0, 255));
 
-	//// Get a grid of squares
-	//int columns = ceil(sqrt(NUM_BALLS / ((double)SCREEN_HEIGHT / (double)SCREEN_WIDTH)));
-	//int rows = ceil(NUM_BALLS / columns);
-	//int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
+		Entity* ball = mainScene->createEntity();
+		ball->addComponent<RectangleRenderer>(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
 
-	//mainScene->AddEntity(createCurrFramesCounter());
-	createFramesCounter();
-	//mainScene->AddEntity(createTimeCounter());
-	//mainScene->AddEntity(createObjCounter(numSpawned));
+		//// Populate scene
+		//addBounds();
 
-	// Create game with scene
-	game.setName("Collider Stress Test");
-	game.addScene(mainScene);
+		//// Get a grid of squares
+		//int columns = ceil(sqrt(NUM_BALLS / ((double)SCREEN_HEIGHT / (double)SCREEN_WIDTH)));
+		//int rows = ceil(NUM_BALLS / columns);
+		//int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
 
-	// Start game loop
-	game.startGame();
+		createCurrFramesCounter();
+		createFramesCounter();
+		createTimeCounter();
+		//createObjCounter(numSpawned);
+
+		// Create game with scene
+		game.setName("Collider Stress Test");
+		game.addScene(mainScene);
+
+		// Start game loop
+		game.startGame();
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << "Caught exception: " << e.what() << std::endl;
+	}
 }

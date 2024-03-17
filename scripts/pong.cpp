@@ -145,7 +145,7 @@ public:
 class CollideSoundEffect : public Component {
 public:
 	CollideSoundEffect(std::string pathToEffect) {
-		sound = make_unique<SoundPlayer>(pathToEffect);
+		sound = make_shared<SoundPlayer>(pathToEffect);
 	}
 	void update() override {}
 	void initialize() override {}
@@ -157,7 +157,7 @@ public:
 		}
 	}
 
-	unique_ptr<SoundPlayer> sound;
+	shared_ptr<SoundPlayer> sound;
 };
 
 // Construct paddle for a corresponding a player type
