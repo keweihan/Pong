@@ -14,12 +14,12 @@ using namespace std;
 using namespace SimpleECS;
 
 // Environment parameters
-const int SCREEN_HEIGHT		= 540;
-const int SCREEN_WIDTH		= 960;
+const int SCREEN_HEIGHT		= 640;
+const int SCREEN_WIDTH		= 1080;
 const int WALL_THICKNESS	= 50;
 
 // Ball parameters
-const int NUM_BALLS = 9000;
+const int NUM_BALLS = 1500;
 const int MAX_SPEED	= 60;
 const int MIN_SPEED	= 30;
 const int SIDE_LENGTH = 3;
