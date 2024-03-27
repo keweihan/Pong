@@ -19,11 +19,12 @@ const int SCREEN_WIDTH		= 960;
 const int WALL_THICKNESS	= 50;
 
 // Ball parameters
-const int NUM_BALLS = 15000;
-const int MAX_SPEED	= 45;
-const int MIN_SPEED	= 20;
-const int SIDE_LENGTH = 3;
-const int RAND_SEED = 42;
+const int NUM_BALLS		= 20000;
+const int MAX_SPEED		= 20;
+const int MIN_SPEED		= 10;
+const int SIDE_LENGTH	= 2;
+const int RAND_SEED		= 42;
+
 
 // Globals
 Scene* mainScene;
