@@ -233,8 +233,6 @@ int main() {
 
 		srand(RAND_SEED);
 
-		Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
-
 		// Create scene
 		mainScene = new Scene(Color(0, 0, 0, 255));
 
@@ -252,11 +250,12 @@ int main() {
 		createObjCounter(numSpawned);
 
 		// Create game with scene
-		game.setName("Collider Stress Test");
-		game.addScene(mainScene);
+		Game::getInstance().configureWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+		Game::getInstance().setName("Collider Stress Test");
+		Game::getInstance().addScene(mainScene);
 
 		// Start game loop
-		game.startGame();
+		Game::getInstance().startGame();
 	}
 	catch (const std::exception& e)
 	{
