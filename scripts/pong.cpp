@@ -36,8 +36,8 @@ int p1Score = 0;
 int p2Score = 0;
 
 // Globals
-FontRenderer* leftText;
-FontRenderer* rightText;
+Handle<FontRenderer> leftText;
+Handle<FontRenderer> rightText;
 Scene* pongScene;
 Entity* ball;
 
@@ -63,11 +63,11 @@ public:
 	// Apply computer control of paddle based on ball position
 	void aiControl(bool& downPressed, bool& upPressed)
 	{
-		bool comp2Active = ball->transform.position.x > 0 && player == COMPUTER2;
-		bool comp1Active = ball->transform.position.x < 0 && player == COMPUTER1;
+		bool comp2Active = ball->transform->position.x > 0 && player == COMPUTER2;
+		bool comp1Active = ball->transform->position.x < 0 && player == COMPUTER1;
 		if (comp2Active || comp1Active)
 		{
-			if (ball->transform.position.y > entity->transform->position.y)
+			if (ball->transform->position.y > entity->transform->position.y)
 			{
 				upPressed = true;
 				downPressed = false;
@@ -119,7 +119,7 @@ public:
 		if (other.entity->tag == "ball")
 		{
 			//Destroy ball
-			pongScene->DestroyEntity(other.entity);
+			pongScene->destroyEntity(other.entity->id);
 
 			// Tally score
 			if (player == PLAYER1)
@@ -164,15 +164,15 @@ public:
 Entity* createPaddle(PlayerType player)
 {
 	// Create paddle and add to scene
-	Entity* paddle = new Entity();
+	Entity* paddle = pongScene->createEntity();
 
-	paddle->addComponent(new RectangleRenderer(10, PADDLE_LENGTH, Color(0xFF, 0xFF, 0xFF)));
-	paddle->addComponent(new PaddleController(player));
-	paddle->addComponent(new BoxCollider(10, PADDLE_LENGTH));
-	paddle->addComponent(new CollideSoundEffect(SOUND_PADDLE));
+	paddle->addComponent<RectangleRenderer>(10, PADDLE_LENGTH, Color(0xFF, 0xFF, 0xFF));
+	paddle->addComponent<PaddleController>(player);
+	paddle->addComponent<BoxCollider>(10, PADDLE_LENGTH);
+	paddle->addComponent<CollideSoundEffect>(SOUND_PADDLE);
 
 	// Position differently based on player
-	paddle->transform.position.x = player == PLAYER1 || player == COMPUTER1 ? -SCREEN_WIDTH / 2 + 20 : SCREEN_WIDTH / 2 - 20;
+	paddle->transform->position.x = player == PLAYER1 || player == COMPUTER1 ? -SCREEN_WIDTH / 2 + 20 : SCREEN_WIDTH / 2 - 20;
 
 	return paddle;
 }
@@ -180,15 +180,11 @@ Entity* createPaddle(PlayerType player)
 // Create ball with initial randomized velocity
 Entity* createBall()
 {
-	Entity* newBall = new Entity("ball");
-	Component* staticComp = new RectangleRenderer(10, 10, Color(0xFF, 0xFF, 0xFF, 0xFF));
-	newBall->addComponent(staticComp);
+	Entity* newBall = pongScene->createEntity("ball");
 
-	Component* staticCollide = new BoxCollider(10, 10);
-	newBall->addComponent(staticCollide);
-
-	PhysicsBody* physics = new PhysicsBody();
-	newBall->addComponent(physics);
+	newBall->addComponent<RectangleRenderer>(10, 10, Color(0xFF, 0xFF, 0xFF, 0xFF));
+	newBall->addComponent<BoxCollider>(10, 10);
+	Handle<PhysicsBody> physics = newBall->addComponent<PhysicsBody>();
 
 	// Randomize direction and speed
 	int direction = rand() % 2 == 0 ? -1 : 1;
@@ -201,27 +197,27 @@ Entity* createBall()
 // Create a floor/ceiling object with sound effect on collision
 Entity* createFloorCeilingWall()
 {
-	Entity* wall = new Entity();
-	wall->addComponent(new BoxCollider(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS));
-	wall->addComponent(new CollideSoundEffect(SOUND_WALL));
+	Entity* wall = pongScene->createEntity();
+	wall->addComponent<BoxCollider>(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS);
+	wall->addComponent<CollideSoundEffect>(SOUND_WALL);
 	return wall;
 }
 
 // Create a side walls with sound effect and score tallying on collision
 Entity* createSideWalls(PlayerType player)
 {
-	Entity* wall = new Entity();
-	wall->addComponent(new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS));
-	wall->addComponent(new BoundScoreRegister(player));
-	wall->addComponent(new CollideSoundEffect(SOUND_SCORE));
+	Entity* wall = pongScene->createEntity();
+	wall->addComponent<BoxCollider>(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS);
+	wall->addComponent<BoundScoreRegister>(player);
+	wall->addComponent<CollideSoundEffect>(SOUND_SCORE);
 	return wall;
 }
 
 // Create center line visual object
 Entity* createCenterLine()
 {
-	Entity* line = new Entity();
-	line->addComponent(new LineRenderer(Vector(0, -SCREEN_HEIGHT), Vector(0, SCREEN_HEIGHT), 5, Color(0xFF, 0xFF, 0xFF), 15));
+	Entity* line = pongScene->createEntity();
+	line->addComponent<LineRenderer>(Vector(0, -SCREEN_HEIGHT), Vector(0, SCREEN_HEIGHT), 5, Color(0xFF, 0xFF, 0xFF), 15);
 	return line;
 }
 
@@ -230,47 +226,36 @@ void addBounds()
 {
 	// Create and position top and bottom colliders
 	Entity* topBound = createFloorCeilingWall();
-	topBound->transform.position.y = SCREEN_HEIGHT / 2 + WALL_THICKNESS / 2;
+	topBound->transform->position.y = SCREEN_HEIGHT / 2 + WALL_THICKNESS / 2;
 	
 	Entity* bottomBound = createFloorCeilingWall();
-	bottomBound->transform.position.y = -SCREEN_HEIGHT / 2 - WALL_THICKNESS / 2;
+	bottomBound->transform->position.y = -SCREEN_HEIGHT / 2 - WALL_THICKNESS / 2;
 	
 	// Create and position side colliders with score tracker component
 	Entity* leftBound = createSideWalls(PLAYER1);
-	leftBound->transform.position.x = -SCREEN_WIDTH / 2 - WALL_THICKNESS / 2;
+	leftBound->transform->position.x = -SCREEN_WIDTH / 2 - WALL_THICKNESS / 2;
 
 	Entity* rightBound = createSideWalls(PLAYER2);
-	rightBound->transform.position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
-	
-	pongScene->AddEntity(topBound);
-	pongScene->AddEntity(bottomBound);
-	pongScene->AddEntity(rightBound);
-	pongScene->AddEntity(leftBound);
+	rightBound->transform->position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
 }
 
 // Create and position score text in scene
 void addScoreCounters()
 {
-	Entity* leftScore = new Entity();
-	leftScore->transform.position = Vector(-SCREEN_WIDTH / 4, 200);
-	leftText = new FontRenderer("0", FONT_FILE, 54);
+	Entity* leftScore = pongScene->createEntity();
+	leftScore->transform->position = Vector(-SCREEN_WIDTH / 4, 200);
+	leftText = leftScore->addComponent<FontRenderer>("0", FONT_FILE, 54);
 	leftText->color = Color(0xFF, 0xFF, 0xFF, 0xFF);
-	leftScore->addComponent(leftText);
 
-	Entity* rightScore = new Entity();
-	rightScore->transform.position = Vector(SCREEN_WIDTH / 4, 200);;
-	rightText = new FontRenderer("0", FONT_FILE, 54);
+	Entity* rightScore = pongScene->createEntity();
+	rightScore->transform->position = Vector(SCREEN_WIDTH / 4, 200);;
+	rightText = rightScore->addComponent<FontRenderer>("0", FONT_FILE, 54);
 	rightText->color = Color(0xFF, 0xFF, 0xFF, 0xFF);
-	rightScore->addComponent(rightText);
-
-	pongScene->AddEntity(leftScore);
-	pongScene->AddEntity(rightScore);
 }
 
 void spawnBall()
 {
 	Entity* newBall = createBall();
-	pongScene->AddEntity(newBall);
 	ball = newBall;
 }
 
@@ -283,16 +268,16 @@ int main() {
 	// Populate scene
 	addBounds();
 	addScoreCounters();
-	pongScene->AddEntity(createCenterLine());
-	pongScene->AddEntity(createPaddle(COMPUTER1));
-	pongScene->AddEntity(createPaddle(COMPUTER2));
+	createCenterLine();
+	createPaddle(COMPUTER1);
+	createPaddle(COMPUTER2);
 	spawnBall();
 
 	// Create game with scene
-	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
-	game.setName("Auto Pong");
-	game.addScene(pongScene);
+	Game::getInstance().configureWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+	Game::getInstance().setName("Auto Pong");
+	Game::getInstance().addScene(pongScene);
 
 	// Start game loop
-	game.startGame();
+	Game::getInstance().startGame();
 }
