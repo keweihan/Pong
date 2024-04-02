@@ -14,16 +14,17 @@ using namespace std;
 using namespace SimpleECS;
 
 // Environment parameters
-const int SCREEN_HEIGHT		= 540;
-const int SCREEN_WIDTH		= 960;
+const int SCREEN_HEIGHT		= 720;
+const int SCREEN_WIDTH		= 1280;
 const int WALL_THICKNESS	= 50;
 
 // Ball parameters
-const int NUM_BALLS = 20000;
-const int MAX_SPEED	= 20;
-const int MIN_SPEED	= 10;
-const int SIDE_LENGTH = 2;
-const int RAND_SEED = 42;
+const int NUM_BALLS		= 13400;
+const int MAX_SPEED		= 35;
+const int MIN_SPEED		= 15;
+const int SIDE_LENGTH	= 3;
+const int RAND_SEED		= 42;
+
 
 // Globals
 Scene* mainScene;
@@ -33,7 +34,7 @@ public:
 
 	void initialize() {
 		textRender = entity->getComponent<FontRenderer>();
-		entity->transform.position = Vector(0, -25);
+		entity->transform->position = Vector(0, -25);
 	};
 
 	void update() {
@@ -46,7 +47,7 @@ public:
 	}
 
 	uint64_t framesPassed = 0;
-	FontRenderer* textRender = nullptr;
+	Handle<FontRenderer> textRender;
 };
 
 class CurrFrameCounter : public Component {
@@ -54,7 +55,7 @@ public:
 
 	void initialize() {
 		textRender = entity->getComponent<FontRenderer>();
-		entity->transform.position = Vector(0, 25);
+		entity->transform->position = Vector(0, 25);
 	};
 
 	void update() {
@@ -73,7 +74,7 @@ public:
 	uint64_t displayFrames = 0;
 	uint64_t prevSecond = 0;
 	uint64_t frameCount = 0;
-	FontRenderer* textRender = nullptr;
+	Handle<FontRenderer> textRender;
 };
 
 class TimeCounter : public Component {
@@ -81,7 +82,7 @@ public:
 
 	void initialize() {
 		textRender = entity->getComponent<FontRenderer>();
-		entity->transform.position = Vector(0, -75);
+		entity->transform->position = Vector(0, -75);
 	};
 
 	void update() {
@@ -89,7 +90,7 @@ public:
 		textRender->text = text;
 	}
 
-	FontRenderer* textRender = nullptr;
+	Handle<FontRenderer> textRender;
 };
 
 class ObjectCounter : public Component {
@@ -98,7 +99,7 @@ public:
 
 	void initialize() {
 		textRender = entity->getComponent<FontRenderer>();
-		entity->transform.position = Vector(0, 75);
+		entity->transform->position = Vector(0, 75);
 	};
 
 	void update() {
@@ -106,58 +107,53 @@ public:
 		textRender->text = text;
 	}
 
-	FontRenderer* textRender = nullptr;
+	Handle<FontRenderer> textRender;
 	int num = 0;
 };
 
 Entity* createObjCounter(int num)
 {
-	Entity* counter = new Entity();
-	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
-	counter->addComponent(new ObjectCounter(num));
+	Entity* counter = mainScene->createEntity();
+	counter->addComponent<FontRenderer>("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff));
+	counter->addComponent<ObjectCounter>(num);
 	return counter;
 }
 
 Entity* createCurrFramesCounter()
 {
-	Entity* counter = new Entity();
-	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
-	counter->addComponent(new CurrFrameCounter());
+	Entity* counter = mainScene->createEntity();
+	counter->addComponent<FontRenderer>("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff));
+	counter->addComponent<CurrFrameCounter>();
 	return counter;
 }
 
 Entity* createFramesCounter()
 {
-	Entity* counter = new Entity();
-	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211,0xff)));
-	counter->addComponent(new AvgFrameCounter());
+	Entity* counter = mainScene->createEntity();
+	counter->addComponent<FontRenderer>("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211,0xff));
+	counter->addComponent<AvgFrameCounter>();
 	return counter;
 }
 
 Entity* createTimeCounter()
 {
-	Entity* counter = new Entity();
-	counter->addComponent(new FontRenderer("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff)));
-	counter->addComponent(new TimeCounter());
+	Entity* counter = mainScene->createEntity();
+	counter->addComponent<FontRenderer>("Default", "assets/bit9x9.ttf", 26, Color(124, 200, 211, 0xff));
+	counter->addComponent<TimeCounter>();
 	return counter;
 }
 
 // Create ball with initial position and inbuilt randomized velocity
 Entity* createBall(const int& x, const int &y)
 {
-	Entity* newBall = new Entity("ball");
-	Component* staticComp = new RectangleRenderer(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
-	newBall->addComponent(staticComp);
-
-	Component* staticCollide = new BoxCollider(SIDE_LENGTH, SIDE_LENGTH);
-	newBall->addComponent(staticCollide);
-
-	PhysicsBody* physics = new PhysicsBody();
-	newBall->addComponent(physics);
+	Entity* newBall = mainScene->createEntity("ball");
+	newBall->addComponent<RectangleRenderer>(SIDE_LENGTH, SIDE_LENGTH, Color(102, 102, 102, 102));
+	newBall->addComponent<BoxCollider>(SIDE_LENGTH, SIDE_LENGTH);
+	Handle<PhysicsBody> physics = newBall->addComponent<PhysicsBody>();
 
 	// Set position
-	newBall->transform.position.x = x;
-	newBall->transform.position.y = y;
+	newBall->transform->position.x = x;
+	newBall->transform->position.y = y;
 
 	// Randomize direction and speed
 	physics->velocity.x = (MIN_SPEED + (rand() % static_cast<int>(MAX_SPEED - MIN_SPEED + 1))) * (rand() % 2 == 0 ? -1 : 1);
@@ -169,16 +165,16 @@ Entity* createBall(const int& x, const int &y)
 // Create a floor/ceiling object with sound effect on collision
 Entity* createFloorCeilingWall()
 {
-	Entity* wall = new Entity();
-	wall->addComponent(new BoxCollider(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS));
+	Entity* wall = mainScene->createEntity();
+	wall->addComponent<BoxCollider>(SCREEN_WIDTH + WALL_THICKNESS, WALL_THICKNESS);
 	return wall;
 }
 
 // Create a side walls with sound effect and score tallying on collision
 Entity* createSideWalls()
 {
-	Entity* wall = new Entity();
-	wall->addComponent(new BoxCollider(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS));
+	Entity* wall = mainScene->createEntity();
+	wall->addComponent<BoxCollider>(WALL_THICKNESS, SCREEN_HEIGHT + WALL_THICKNESS);
 	return wall;
 }
 
@@ -186,21 +182,16 @@ Entity* createSideWalls()
 void addBounds()
 {
 	Entity* topBound = createFloorCeilingWall();
-	topBound->transform.position.y = SCREEN_HEIGHT / 2 + WALL_THICKNESS / 2;
+	topBound->transform->position.y = SCREEN_HEIGHT / 2 + WALL_THICKNESS / 2;
 	
 	Entity* bottomBound = createFloorCeilingWall();
-	bottomBound->transform.position.y = -SCREEN_HEIGHT / 2 - WALL_THICKNESS / 2;
+	bottomBound->transform->position.y = -SCREEN_HEIGHT / 2 - WALL_THICKNESS / 2;
 	
 	Entity* leftBound = createSideWalls();
-	leftBound->transform.position.x = -SCREEN_WIDTH / 2 - WALL_THICKNESS / 2;
+	leftBound->transform->position.x = -SCREEN_WIDTH / 2 - WALL_THICKNESS / 2;
 
 	Entity* rightBound = createSideWalls();
-	rightBound->transform.position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
-	
-	mainScene->AddEntity(topBound);
-	mainScene->AddEntity(bottomBound);
-	mainScene->AddEntity(rightBound);
-	mainScene->AddEntity(leftBound);
+	rightBound->transform->position.x = SCREEN_WIDTH / 2 + WALL_THICKNESS / 2;
 }
 
 // Spawn balls with physics in a grid across screen
@@ -224,7 +215,6 @@ int spawnBalls(const int& numRow, const int& numColumn, const int& num)
 		for (int j = 0; j < numColumn; ++j)
 		{
 			Entity* newBall = createBall(xSpawnPos, ySpawnPos);
-			mainScene->AddEntity(newBall);
 			xSpawnPos += columnSpacing;
 
 			numSpawned++;
@@ -237,32 +227,38 @@ int spawnBalls(const int& numRow, const int& numColumn, const int& num)
 }
 
 int main() {
-	cout << "Hello World!" << endl;
+	try
+	{
+		cout << "Hello World!" << endl;
 
-	srand(RAND_SEED);
-	
-	Game game(SCREEN_WIDTH, SCREEN_HEIGHT);
+		srand(RAND_SEED);
 
-	// Create scene
-	mainScene = new Scene(Color(0, 0, 0, 255));
+		// Create scene
+		mainScene = new Scene(Color(0, 0, 0, 255));
 
-	// Populate scene
-	addBounds();
+		// Populate scene
+		addBounds();
 
-	// Get a grid of squares
-	int columns = ceil(sqrt(NUM_BALLS / ((double)SCREEN_HEIGHT / (double)SCREEN_WIDTH)));
-	int rows = ceil(NUM_BALLS / columns);
-	int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
+		// Get a grid of squares
+		int columns = ceil(sqrt(NUM_BALLS / ((double)SCREEN_HEIGHT / (double)SCREEN_WIDTH)));
+		int rows = ceil(NUM_BALLS / columns);
+		int numSpawned = spawnBalls(rows, columns, NUM_BALLS);
 
-	mainScene->AddEntity(createCurrFramesCounter());
-	mainScene->AddEntity(createFramesCounter());
-	mainScene->AddEntity(createTimeCounter());
-	mainScene->AddEntity(createObjCounter(numSpawned));
+		createCurrFramesCounter();
+		createFramesCounter();
+		createTimeCounter();
+		createObjCounter(numSpawned);
 
-	// Create game with scene
-	game.setName("Collider Stress Test");
-	game.addScene(mainScene);
+		// Create game with scene
+		Game::getInstance().configureWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+		Game::getInstance().setName("Collider Stress Test");
+		Game::getInstance().addScene(mainScene);
 
-	// Start game loop
-	game.startGame();
+		// Start game loop
+		Game::getInstance().startGame();
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << "Caught exception: " << e.what() << std::endl;
+	}
 }
