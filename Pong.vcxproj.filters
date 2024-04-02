@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="scripts\collisionStress.cpp">
+    <ClCompile Include="scripts\conway.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
