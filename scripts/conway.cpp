@@ -18,7 +18,7 @@ using namespace SimpleECS;
 const string RLE_PATH = "assets/rats.rle";
 const int SCREEN_HEIGHT = 960;
 const int SCREEN_WIDTH = 1280;
-const int CELL_SIZE = 2; // SIZE in pixels of visible cells
+const int CELL_SIZE = 1; // SIZE in pixels of visible cells
 
 const double GEN_LENGTH = 0.05; // Time in seconds per generation
 
@@ -40,7 +40,6 @@ std::vector<bool> parseRLELine(const std::string& line) {
             count = 0;
         }
     }
-
     return row;
 }
 
@@ -68,11 +67,26 @@ std::vector<std::vector<bool>> parseRLE(const std::string& filePath) {
     int row = 0, col = 0;
     std::string cellData;
     while (std::getline(file, cellData, '$')) {
-        grid.push_back(parseRLELine(cellData));
+
+        int numEmpties = 0;
+        if (isdigit(cellData.back())) {
+            numEmpties = cellData.back() - '0' - 1;
+            cellData.pop_back();
+        }
+
+        // Parse the remaining line
+        if (!cellData.empty()) {
+            grid.push_back(parseRLELine(cellData));
+        }
+
+        for (int i = 0; i < numEmpties; ++i) {
+            grid.push_back(std::vector<bool>());
+        }
+  
     }
 
     file.close();
-
+    std::reverse(grid.begin(), grid.end());
     return grid;
 }
 
@@ -108,12 +122,10 @@ public:
         for (int dr = -1; dr <= 1; ++dr) {
             for (int dc = -1; dc <= 1; ++dc) {
                 if (dr != 0 || dc != 0) {  // Exclude the cell itself
-                    int nr = r + dr;
-                    int nc = c + dc;
-                    
-                    if(nr < cells.size() && nc < cells[nr].size()) {
-                        liveNeighbors += cells[nr][nc] ? 1 : 0;
-                    }
+                    // Toridial neighbor calculation to handle edges
+                    int nr = (r + dr + cells.size()) % cells.size();
+                    int nc = (c + dc + cells[0].size()) % cells[0].size();
+                    liveNeighbors += cells[nr][nc] ? 1 : 0;
                 }
             }
         }
@@ -169,7 +181,7 @@ public:
             for (int c = 0; c < Cell::viewGridWidth + 1; c++)
             {
                 auto cellEnt = scene->createEntity();
-                cellEnt->addComponent<RectangleRenderer>(Cell::cellSize, Cell::cellSize, Color(0xFF, 0xFF, 0xFF));
+                cellEnt->addComponent<RectangleRenderer>(CELL_SIZE, CELL_SIZE, Color(0xFF, 0xFF, 0xFF));
                 cellEnt->addComponent<Cell>(r, c);
             }
         }
@@ -257,15 +269,13 @@ public:
 
 int main() {
     auto parsedGrid = parseRLE(RLE_PATH);
-
-    // print the grid
-    //for (const auto& row : parsedGrid) {
-    //    for (bool cell : row) {
-    //        std::cout << (cell ? 'o' : 'b');
-    //    }
-    //    std::cout << '\n';
-    //}
-
+     //print the grid
+     //for (const auto& row : parsedGrid) {
+     //    for (bool cell : row) {
+     //        std::cout << (cell ? 'o' : 'b');
+     //    }
+     //    std::cout << '\n';
+     //}
     // Create Scene
     Scene* scene = new Scene(Color(0, 0, 0, 255));
     Game::getInstance().addScene(scene);
